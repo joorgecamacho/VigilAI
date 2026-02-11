@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  vigilai:
+    build: .
+    container_name: vigilai_bot
+    restart: unless-stopped
+    # Para Linux nativo (Mejor rendimiento/Compatible):
+    # network_mode: host 
+
+    # Para Windows/Mac (Docker Desktop):
+    # Descomenta las siguientes lineas y comenta 'network_mode: host'
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    env_file:
+      - .env
+    volumes:
+      - ./data/cache:/app/.cache
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
