@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIGIL_AI // SYSTEM_CONSOLE</title>
+    <meta name="description"
+        content="VigilAI — Autonomous AI Moderation System for Twitch. Real-time toxicity detection using BERT + Ollama LLM. 100% local, $0 API costs.">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <div class="crt-overlay"></div>
+    <div class="scanline"></div>
+
+    <!-- ======================== -->
+    <!-- SECTION 1: LIVE CONSOLE  -->
+    <!-- ======================== -->
+    <section class="console-section">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1 class="glow">VIGIL_AI <span style="font-size:0.5rem;opacity:0.4;vertical-align:top;">v2.0</span>
+                </h1>
+                <div class="subtitle">AUTONOMOUS MODERATION SYSTEM // EDGE DEPLOYMENT</div>
+            </div>
+            <div class="status-box">
+                <div id="conn-status" class="conn-status off">● DISCONNECTED</div>
+                <div id="clock" class="clock">00:00:00</div>
+            </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="main-grid">
+
+            <!-- LEFT PANEL -->
+            <div class="left-panel">
+
+                <!-- Connection -->
+                <div class="panel-box">
+                    <label>Target Channel</label>
+                    <input type="text" id="channel-input" placeholder="channel_name">
+                    <button class="btn-connect" id="btn-connect" onclick="toggleSystem()">INITIALIZE</button>
+                </div>
+
+                <!-- Timer + Stats -->
+                <div class="panel-box">
+                    <label>Session Timer</label>
+                    <div class="timer-value glow" id="timer-display">60</div>
+                    <div class="stat-row"><span>BERT_MODEL</span><span>XLM-RoBERTa</span></div>
+                    <div class="stat-row"><span>LLM_MODEL</span><span>GEMMA-3-12B</span></div>
+                    <div class="stat-row"><span>API_COST</span><span style="color:var(--green)">$0.00</span></div>
+                </div>
+
+                <!-- Recent Detections -->
+                <div class="detections-box">
+                    <div class="detections-header">Recent Detections</div>
+                    <div class="detections-list" id="detections-list"></div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT: TERMINAL -->
+            <div class="terminal-panel">
+                <div class="terminal-label">SYSTEM_LOGS</div>
+                <div class="terminal-output" id="terminal-output">
+                    <div class="empty-state">Waiting for command...</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="scroll-hint">▼ SCROLL FOR PROJECT INFO ▼</div>
+    </section>
+
+    <!-- ======================== -->
+    <!-- SECTION 2: ABOUT         -->
+    <!-- ======================== -->
+    <section class="about-section">
+        <div class="container">
+
+            <!-- WHAT IS VIGILAI -->
+            <h2>// ABOUT THE PROJECT</h2>
+            <div class="section-subtitle">What is VigilAI?</div>
+            <p>
+                <strong>VigilAI</strong> is an <strong>autonomous AI-powered moderation system</strong> designed for
+                live
+                Twitch streams. It monitors chat messages in real-time, detects toxic behavior using a cascading AI
+                pipeline, and takes automated moderation actions — all running <strong>100% locally</strong> on your
+                machine with <strong>zero API costs</strong>.
+            </p>
+            <p>
+                Unlike cloud-based moderation services, VigilAI runs entirely on-device. Your chat data never leaves
+                your computer. It's designed to be deployed on a secondary machine (like a Mini PC) next to the
+                streamer's main rig, acting as a silent, intelligent guardian of the community.
+            </p>
+
+            <!-- ARCHITECTURE -->
+            <h2 style="margin-top:60px;">// ARCHITECTURE</h2>
+            <div class="section-subtitle">The Hybrid Traffic Light System</div>
+            <p>VigilAI uses a multi-layered AI pipeline inspired by a traffic light metaphor. Each layer acts as a
+                filter, escalating only when necessary:</p>
+
+            <div class="arch-grid">
+                <div class="arch-card green">
+                    <div class="step-num">01</div>
+                    <h3>🟢 GREEN FILTER — Whitelist</h3>
+                    <p>VIPs, Moderators, and Subscribers pass through directly. Trusted users are never flagged. Cost:
+                        $0.</p>
+                </div>
+                <div class="arch-card red">
+                    <div class="step-num">02</div>
+                    <h3>🔴 RED FILTER — BERT (Local)</h3>
+                    <p>Every message is scored by a local BERT model for toxicity. Messages scoring above 95% are
+                        immediately actioned. Runs in ~5ms. Cost: $0.</p>
+                </div>
+                <div class="arch-card yellow">
+                    <div class="step-num">03</div>
+                    <h3>🟡 YELLOW FILTER — LLM (Ollama)</h3>
+                    <p>Ambiguous messages (BERT 70–95%) are sent to a local LLM (Gemma 3 12B) for contextual analysis.
+                        It understands sarcasm, slang, and cultural nuance. Cost: $0.</p>
+                </div>
+                <div class="arch-card blue">
+                    <div class="step-num">04</div>
+                    <h3>🔵 BLUE FILTER — Personality</h3>
+                    <p>The same LLM generates witty, in-character responses to toxic users before timing them out. It's
+                        not just a mod — it's a personality. Cost: $0.</p>
+                </div>
+            </div>
+
+            <!-- HOW TO USE -->
+            <h2>// HOW TO USE THIS DEMO</h2>
+            <div class="section-subtitle">Try it live in 3 steps</div>
+
+            <div class="howto-grid">
+                <div class="howto-step">
+                    <div class="icon">📡</div>
+                    <h3>1. Enter a Channel</h3>
+                    <p>Type the name of any <strong>live Twitch channel</strong> in the input field above. The bot will
+                        connect to that channel's chat in read-only mode.</p>
+                </div>
+                <div class="howto-step">
+                    <div class="icon">⚡</div>
+                    <h3>2. Click Initialize</h3>
+                    <p>The system boots up the BERT model and connects to Twitch IRC. You'll see real-time logs in the
+                        terminal as messages are analyzed.</p>
+                </div>
+                <div class="howto-step">
+                    <div class="icon">🛡️</div>
+                    <h3>3. Watch the AI Work</h3>
+                    <p>Every chat message gets a toxicity score. Suspicious messages appear in the left panel. The
+                        session auto-terminates after <strong>60 seconds</strong>.</p>
+                </div>
+            </div>
+
+            <!-- TECH STACK -->
+            <h2>// TECH STACK</h2>
+            <div class="section-subtitle">Built with open-source technologies</div>
+
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <span class="tech-icon">🐍</span>
+                    <div>
+                        <div class="tech-name">Python 3.11+</div>
+                        <div class="tech-desc">Core language — async-first architecture</div>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <span class="tech-icon">🤖</span>
+                    <div>
+                        <div class="tech-name">Transformers + BERT</div>
+                        <div class="tech-desc">HuggingFace — local toxicity classification</div>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <span class="tech-icon">🧠</span>
+                    <div>
+                        <div class="tech-name">Ollama + Gemma 3</div>
+                        <div class="tech-desc">Local LLM — context-aware reasoning</div>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <span class="tech-icon">📺</span>
+                    <div>
+                        <div class="tech-name">TwitchIO</div>
+                        <div class="tech-desc">Async Twitch bot framework</div>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <span class="tech-icon">⚡</span>
+                    <div>
+                        <div class="tech-name">FastAPI + WebSockets</div>
+                        <div class="tech-desc">Real-time streaming backend</div>
+                    </div>
+                </div>
+                <div class="tech-item">
+                    <span class="tech-icon">🐳</span>
+                    <div>
+                        <div class="tech-name">Docker</div>
+                        <div class="tech-desc">Containerized deployment</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KEY FEATURES -->
+            <h2>// KEY FEATURES</h2>
+            <div class="section-subtitle">What makes VigilAI different</div>
+
+            <div class="arch-grid">
+                <div class="arch-card green">
+                    <h3>🔒 100% Private</h3>
+                    <p>All AI models run locally. Chat data never leaves your machine. No cloud APIs, no data sharing,
+                        no subscriptions.</p>
+                </div>
+                <div class="arch-card blue">
+                    <h3>🎭 Context-Aware</h3>
+                    <p>Goes beyond keyword matching. The LLM understands sarcasm, cultural slang, and context to avoid
+                        false positives.</p>
+                </div>
+                <div class="arch-card yellow">
+                    <h3>⚡ Real-Time</h3>
+                    <p>BERT scoring runs in under 5ms per message. Even in the busiest chats, every message gets
+                        analyzed instantly.</p>
+                </div>
+                <div class="arch-card red">
+                    <h3>💸 $0 Cost</h3>
+                    <p>No API keys, no monthly fees. VigilAI uses open-source models that run entirely on your hardware.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEPLOYMENT -->
+        <h2 style="margin-top:60px;">// EDGE DEPLOYMENT</h2>
+        <div class="section-subtitle">Self-Hosted on a GMKtec Mini PC — Full MLOps Pipeline</div>
+        <p>
+            VigilAI runs as an <strong>always-on edge service</strong> on a dedicated <strong>GMKtec Mini PC</strong>
+            with <strong>Ubuntu Server 24.04 LTS</strong>. The entire ML inference stack — BERT toxicity classification
+            and Gemma 3 12B via Ollama — executes locally on-device, ensuring <strong>zero latency</strong>,
+            <strong>full data privacy</strong>, and <strong>$0 recurring costs</strong>.
+        </p>
+        <p>
+            The deployment uses a <strong>Docker Compose</strong> orchestration for the bot container while
+            <strong>Ollama runs natively</strong> on the host for direct hardware access. Updates are deployed via
+            a <strong>git-based CI/CD script</strong>, and the web console is securely exposed through
+            <strong>Cloudflare Tunnel</strong> — no open router ports, no Nginx needed.
+        </p>
+
+        <div class="arch-grid">
+            <div class="arch-card green">
+                <div class="step-num">01</div>
+                <h3>🖥️ OS & Hardware</h3>
+                <p><strong>GMKtec Mini PC</strong> (16GB+ RAM, Intel N100/AMD Ryzen). Fresh install of
+                    <strong>Ubuntu Server 24.04 LTS</strong>. Headless — managed entirely via SSH. Silent, low-power,
+                    always-on.
+                </p>
+            </div>
+            <div class="arch-card green">
+                <div class="step-num">02</div>
+                <h3>🧠 Ollama (Native)</h3>
+                <p>Ollama is installed <strong>directly on the host OS</strong> (not in Docker) for maximum performance
+                    and direct CPU/RAM access. The <strong>Gemma 3 12B</strong> model is pulled and served on
+                    <code>localhost:11434</code>. Runs as a systemd service with auto-start.
+                </p>
+            </div>
+            <div class="arch-card blue">
+                <div class="step-num">03</div>
+                <h3>🐳 Docker Compose</h3>
+                <p>The VigilAI bot runs inside a <strong>Docker container</strong> orchestrated by
+                    <code>docker-compose.yml</code>. Uses <code>network_mode: host</code> to reach Ollama on localhost.
+                    Configured with <code>restart: unless-stopped</code>, log rotation, and memory limits.
+                </p>
+            </div>
+            <div class="arch-card blue">
+                <div class="step-num">04</div>
+                <h3>🔒 Cloudflare Tunnel</h3>
+                <p>The web console is exposed to the internet via <strong>Cloudflare Tunnel</strong>
+                    (<code>cloudflared</code>). No open router ports, no Nginx, no SSL cert management. Encrypted
+                    end-to-end with zero-config DNS pointing to <code>localhost:8000</code>.</p>
+            </div>
+            <div class="arch-card yellow">
+                <div class="step-num">05</div>
+                <h3>🔄 CI/CD Deploy Script</h3>
+                <p>One-command deployments via <code>scripts/deploy.sh</code>: pulls latest code from GitHub,
+                    rebuilds the Docker image, and restarts the service. No downtime, no manual steps.
+                    Future: GitHub Actions webhook for fully automated pushes.</p>
+            </div>
+            <div class="arch-card red">
+                <div class="step-num">06</div>
+                <h3>🚀 Boot Sequence</h3>
+                <p>Power on → Ubuntu boots → systemd starts Ollama → Gemma 3 model loads into RAM →
+                    Docker Compose starts VigilAI container → Cloudflare Tunnel exposes console →
+                    <strong>fully autonomous, zero human intervention</strong>.
+                </p>
+            </div>
+        </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>VIGIL_AI v2.0 — Autonomous Moderation System — Built by
+            <a href="https://github.com/joorgecamacho" target="_blank">Jorge Camacho</a>
+        </p>
+    </footer>
+
+    <!-- APPLICATION LOGIC -->
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

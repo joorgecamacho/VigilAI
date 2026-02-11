@@ -1,0 +1,22 @@
+# Ignore Docker build artifacts
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.cache/
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional, comment out if you want docs in image)
+README.md
+docs/
+
+# Environment files (these should be passed at runtime)
+.env
+.env.*

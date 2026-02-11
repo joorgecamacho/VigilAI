@@ -1,0 +1,19 @@
+# Core Dependencies
+twitchio==2.9.1
+python-dotenv==1.0.0
+
+# AI/ML Dependencies (Local Brain)
+torch>=2.2.0
+transformers>=4.38.0
+scipy>=1.12.0
+numpy>=1.26.4
+ollama==0.1.6
+protobuf>=3.20.0
+sentencepiece>=0.1.99
+
+# Web Interface Dependencies
+fastapi>=0.109.0
+uvicorn>=0.27.0
+jinja2>=3.1.3
+websockets>=12.0
+
