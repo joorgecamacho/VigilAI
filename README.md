@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <img src="0402.gif" alt="VigilAI Demo" width="800">
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-architecture">Architecture</a> •
   <a href="#-quick-start">Quick Start</a> •
