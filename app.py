@@ -10,76 +10,65 @@ from collections import deque
 import json
 from src.bot.main_bot import VigilAIBot
 from dotenv import load_dotenv
+
 # Load environment variables
 load_dotenv()
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WebServer")
+
 app = FastAPI()
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="static")
-# Store active logs in memory (for new connections to see history)
+
+# Multitenant Architecture
 LOG_BUFFER_SIZE = 50
-log_buffer = deque(maxlen=LOG_BUFFER_SIZE)
-# Active WebSocket connections
-active_connections: list[WebSocket] = []
-# Global Bot Instance
-bot_instance: VigilAIBot = None
-bot_task = None
-bot_lock = asyncio.Lock()
-class WebSocketLogHandler(logging.Handler):
-    """Custom logging handler to send logs to WebSockets"""
-    def emit(self, record):
-        log_entry = self.format(record)
-        # We want structured data if possible, but for now just text
-        # If the message is a dict or json string, parse it? 
-        # For simplicity, we'll send raw text and let frontend handle it, 
-        # OR we can update the bot to send structured events.
-        
-        # Let's try to parse if it looks like our structured log
-        msg = record.getMessage()
-        
-        event = {
-            "type": "log",
-            "level": record.levelname,
-            "message": msg,
-            "timestamp": record.created
-        }
-        
-        # Add to buffer
-        log_buffer.append(event)
-        
-        # Broadcast to all
-        asyncio.create_task(broadcast_log(event))
-async def broadcast_log(event: dict):
-    """Send log event to all connected clients"""
-    if not active_connections:
+
+class Session:
+    def __init__(self):
+        self.bot_instance: VigilAIBot = None
+        self.bot_task = None
+        self.active_connections: list[WebSocket] = []
+        self.log_buffer = deque(maxlen=LOG_BUFFER_SIZE)
+        self.lock = asyncio.Lock()
+
+sessions: dict[str, Session] = {}
+
+def get_session(session_id: str) -> Session:
+    if session_id not in sessions:
+        sessions[session_id] = Session()
+    return sessions[session_id]
+
+async def broadcast_log(session_id: str, event: dict):
+    """Send log event to all connected clients in a specific session"""
+    session = get_session(session_id)
+    session.log_buffer.append(event)
+    
+    if not session.active_connections:
         return
     
     data = json.dumps(event)
-    for connection in active_connections:
+    for connection in session.active_connections:
         try:
             await connection.send_text(data)
         except Exception:
-            # Connection might be closed
             pass
-# Add handler to root logger so we capture everything
-ws_handler = WebSocketLogHandler()
-ws_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ws_handler.setFormatter(formatter)
-logging.getLogger().addHandler(ws_handler)
+
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-@app.websocket("/ws/logs")
-async def websocket_endpoint(websocket: WebSocket):
+    return templates.TemplateResponse(request=request, name="index.html")
+
+@app.websocket("/ws/logs/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.accept()
-    active_connections.append(websocket)
+    session = get_session(session_id)
+    session.active_connections.append(websocket)
     
     # Send history
-    for event in log_buffer:
+    for event in session.log_buffer:
         await websocket.send_text(json.dumps(event))
         
     try:
@@ -87,24 +76,28 @@ async def websocket_endpoint(websocket: WebSocket):
             # Keep connection alive headers
             await websocket.receive_text()
     except Exception:
-        if websocket in active_connections:
-            active_connections.remove(websocket)
-async def bot_event_callback(event_type: str, data: dict):
-    """Callback for the bot to send structured data to UI"""
-    event = {
-        "type": event_type,  # 'analysis', 'action', 'system'
-        "data": data,
-        "timestamp": asyncio.get_event_loop().time()
-    }
-    await broadcast_log(event)
+        if websocket in session.active_connections:
+            session.active_connections.remove(websocket)
+
+def create_bot_event_callback(session_id: str):
+    async def bot_event_callback(event_type: str, data: dict):
+        event = {
+            "type": event_type,
+            "data": data,
+            "timestamp": asyncio.get_event_loop().time()
+        }
+        await broadcast_log(session_id, event)
+    return bot_event_callback
+
 @app.post("/api/start")
-async def start_bot(channel: str):
-    global bot_instance, bot_task
+async def start_bot(channel: str, session_id: str):
+    session = get_session(session_id)
     
-    async with bot_lock:
-        if bot_instance:
-             return {"status": "error", "message": "Bot is already running"}
-        logger.info(f"Starting bot for channel: {channel}")
+    async with session.lock:
+        if session.bot_instance:
+             return {"status": "error", "message": "Bot is already running for this session"}
+        
+        logger.info(f"Starting bot for channel: {channel} (Session: {session_id})")
         
         # Validate env vars
         token = os.getenv("TWITCH_TOKEN")
@@ -112,58 +105,65 @@ async def start_bot(channel: str):
         
         if not token:
             return {"status": "error", "message": "Missing TWITCH_TOKEN"}
+
         # Initialize Bot
         try:
-            bot_instance = VigilAIBot(
+            session.bot_instance = VigilAIBot(
                 token=token,
                 client_secret=client_secret,
                 nick=os.getenv("BOT_NICK", "vigilai_bot"),
                 channels=[channel],
-                event_callback=bot_event_callback # Inject callback
+                event_callback=create_bot_event_callback(session_id)
             )
             
             # Run bot in background task
-            bot_task = asyncio.create_task(bot_instance.start())
+            session.bot_task = asyncio.create_task(session.bot_instance.start())
             
             # Schedule auto-stop after 60 seconds
-            asyncio.create_task(stop_bot_after_timeout(60))
+            asyncio.create_task(stop_bot_after_timeout(60, session_id))
             
             return {"status": "success", "message": f"Bot started for channel {channel}"}
             
         except Exception as e:
             logger.error(f"Failed to start bot: {e}")
-            bot_instance = None
+            session.bot_instance = None
             return {"status": "error", "message": str(e)}
-async def stop_bot_after_timeout(seconds: int):
+
+async def stop_bot_after_timeout(seconds: int, session_id: str):
     await asyncio.sleep(seconds)
-    await stop_bot()
+    await stop_bot(session_id)
+
 @app.post("/api/stop")
-async def stop_bot():
-    global bot_instance, bot_task
+async def stop_bot(session_id: str):
+    session = get_session(session_id)
     
-    async with bot_lock:
-        if not bot_instance:
-            return {"status": "ignored", "message": "Bot not running"}
+    async with session.lock:
+        if not session.bot_instance:
+            return {"status": "ignored", "message": "Bot not running for this session"}
             
-        logger.info("Stopping bot...")
+        logger.info(f"Stopping bot (Session: {session_id})...")
         try:
-            await bot_instance.close()
+            await session.bot_instance.close()
         except Exception as e:
             logger.error(f"Error closing bot: {e}")
         
-        if bot_task:
-            bot_task.cancel()
+        if session.bot_task:
+            session.bot_task.cancel()
             try:
-                await bot_task
+                await session.bot_task
             except asyncio.CancelledError:
                 pass
+            except Exception as e:
+                logger.error(f"Bot task exited with error: {e}")
         
-        bot_instance = None
-        bot_task = None
+        session.bot_instance = None
+        session.bot_task = None
         
         # Notify UI
-        await bot_event_callback("system", {"message": "Session Ended. Bot disconnected."})
+        callback = create_bot_event_callback(session_id)
+        await callback("system", {"message": "Session Ended. Bot disconnected."})
         
         return {"status": "success", "message": "Bot stopped"}
+
 if __name__ == "__main__":
-    uvicorn.run("web_server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

@@ -45,7 +45,7 @@ class VigilAIBot(commands.Bot):
         
         # Initialize Brains
         self.brain = LocalBrain()
-        self.ollama = OllamaBrain(model="gemma3:12b")
+        self.ollama = OllamaBrain(model="gemma4:31b-cloud")
         
     async def _emit_event(self, event_type: str, data: dict):
         """Helper to emit events to callback if it exists"""
@@ -103,7 +103,7 @@ class VigilAIBot(commands.Bot):
             })
             # Still allow personality interaction for trusted users
             if self.nick.lower() in text.lower():
-                response = self.ollama.generate_response(author.name, text)
+                response = await self.ollama.generate_response(author.name, text)
                 if response:
                     await message.channel.send(response)
                     logging.info(f"🤖 Bot Response: {response}")
@@ -157,7 +157,7 @@ class VigilAIBot(commands.Bot):
                 "message": f"🟡 Ambiguous content ({score:.2%}). Consulting LLM for context analysis..."
             })
             
-            sentiment = self.ollama.analyze_complex_sentiment(text)
+            sentiment = await self.ollama.analyze_complex_sentiment(text)
             logging.info(f"🧠 Ollama Verdict: {sentiment.upper()}")
             
             await self._emit_event("analysis_update", {
@@ -182,7 +182,7 @@ class VigilAIBot(commands.Bot):
         # Bot responds when mentioned.
         # ═══════════════════════════════════════════
         if self.nick.lower() in text.lower():
-            response = self.ollama.generate_response(author.name, text)
+            response = await self.ollama.generate_response(author.name, text)
             if response:
                 await message.channel.send(response)
                 logging.info(f"🔵 Bot Response to {author.name}: {response}")
@@ -201,7 +201,7 @@ class VigilAIBot(commands.Bot):
         try:
             # 🔵 BLUE: Generate a witty response before timeout
             try:
-                roast = self.ollama.generate_response(
+                roast = await self.ollama.generate_response(
                     author.name,
                     f"This user just said something toxic: '{message.content}'. Give a short, witty roast before they get timed out."
                 )

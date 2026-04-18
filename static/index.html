@@ -51,7 +51,7 @@
                     <label>Session Timer</label>
                     <div class="timer-value glow" id="timer-display">60</div>
                     <div class="stat-row"><span>BERT_MODEL</span><span>XLM-RoBERTa</span></div>
-                    <div class="stat-row"><span>LLM_MODEL</span><span>GEMMA-3-12B</span></div>
+                    <div class="stat-row"><span>LLM_MODEL</span><span>GEMMA4-31B-CLOUD</span></div>
                     <div class="stat-row"><span>API_COST</span><span style="color:var(--green)">$0.00</span></div>
                 </div>
 
@@ -120,7 +120,7 @@
                 <div class="arch-card yellow">
                     <div class="step-num">03</div>
                     <h3>🟡 YELLOW FILTER — LLM (Ollama)</h3>
-                    <p>Ambiguous messages (BERT 70–95%) are sent to a local LLM (Gemma 3 12B) for contextual analysis.
+                    <p>Ambiguous messages (BERT 70–95%) are sent to a local LLM (Gemma 4 31B) for contextual analysis.
                         It understands sarcasm, slang, and cultural nuance. Cost: $0.</p>
                 </div>
                 <div class="arch-card blue">
@@ -178,7 +178,7 @@
                 <div class="tech-item">
                     <span class="tech-icon">🧠</span>
                     <div>
-                        <div class="tech-name">Ollama + Gemma 3</div>
+                        <div class="tech-name">Ollama + Gemma 4</div>
                         <div class="tech-desc">Local LLM — context-aware reasoning</div>
                     </div>
                 </div>
@@ -221,13 +221,17 @@
                         false positives.</p>
                 </div>
                 <div class="arch-card yellow">
-                    <h3>⚡ Real-Time</h3>
-                    <p>BERT scoring runs in under 5ms per message. Even in the busiest chats, every message gets
-                        analyzed instantly.</p>
+                    <h3>⚡ Real-Time & Async</h3>
+                    <p>BERT scoring runs in under 5ms per message. Heavy LLM evaluations are asynchronous, meaning chat processing is never blocked.</p>
                 </div>
                 <div class="arch-card red">
                     <h3>💸 $0 Cost</h3>
                     <p>No API keys, no monthly fees. VigilAI uses open-source models that run entirely on your hardware.
+                    </p>
+                </div>
+                <div class="arch-card green">
+                    <h3>🌐 Multi-Session SaaS</h3>
+                    <p>Host it once on your NucBoxG5 and share the link. Multiple streamers can moderate their own separate channels simultaneously without interfering with each other.
                     </p>
                 </div>
             </div>
@@ -239,7 +243,7 @@
         <p>
             VigilAI runs as an <strong>always-on edge service</strong> on a dedicated <strong>GMKtec Mini PC</strong>
             with <strong>Ubuntu Server 24.04 LTS</strong>. The entire ML inference stack — BERT toxicity classification
-            and Gemma 3 12B via Ollama — executes locally on-device, ensuring <strong>zero latency</strong>,
+            and Gemma 4 31B via Ollama — executes locally on-device, ensuring <strong>zero latency</strong>,
             <strong>full data privacy</strong>, and <strong>$0 recurring costs</strong>.
         </p>
         <p>
@@ -262,7 +266,7 @@
                 <div class="step-num">02</div>
                 <h3>🧠 Ollama (Native)</h3>
                 <p>Ollama is installed <strong>directly on the host OS</strong> (not in Docker) for maximum performance
-                    and direct CPU/RAM access. The <strong>Gemma 3 12B</strong> model is pulled and served on
+                    and direct CPU/RAM access. The <strong>Gemma 4 31B</strong> model is pulled and served on
                     <code>localhost:11434</code>. Runs as a systemd service with auto-start.
                 </p>
             </div>
@@ -291,7 +295,7 @@
             <div class="arch-card red">
                 <div class="step-num">06</div>
                 <h3>🚀 Boot Sequence</h3>
-                <p>Power on → Ubuntu boots → systemd starts Ollama → Gemma 3 model loads into RAM →
+                <p>Power on → Ubuntu boots → systemd starts Ollama → Gemma 4 model loads into RAM →
                     Docker Compose starts VigilAI container → Cloudflare Tunnel exposes console →
                     <strong>fully autonomous, zero human intervention</strong>.
                 </p>

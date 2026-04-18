@@ -30,5 +30,5 @@ RUN mkdir -p /app/.cache
 ENV TRANSFORMERS_CACHE=/app/.cache
 ENV HF_HOME=/app/.cache
 
-# Run the application
-CMD ["python", "main.py"]
+# Run the web application
+CMD ["python", "app.py"]

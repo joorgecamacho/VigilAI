@@ -12,6 +12,12 @@ let ws = null;
 let timerInterval = null;
 let timeLeft = 60;
 
+let sessionId = localStorage.getItem('sessionId');
+if (!sessionId) {
+    sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('sessionId', sessionId);
+}
+
 // ============================================
 // CLOCK
 // ============================================
@@ -26,7 +32,7 @@ updateClock();
 // ============================================
 function connectWS() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws/logs`);
+    ws = new WebSocket(`${proto}://${location.host}/ws/logs/${sessionId}`);
 
     ws.onopen = () => {
         const el = document.getElementById('conn-status');
@@ -161,7 +167,7 @@ async function toggleSystem() {
         logToTerminal('system', `Initializing connection to channel: ${channel}...`);
 
         try {
-            const res = await fetch(`/api/start?channel=${channel}`, { method: 'POST' });
+            const res = await fetch(`/api/start?channel=${channel}&session_id=${sessionId}`, { method: 'POST' });
             const json = await res.json();
             if (json.status === 'error') {
                 logToTerminal('error', json.message);
@@ -183,7 +189,7 @@ async function toggleSystem() {
 }
 
 async function stopSystem() {
-    try { await fetch('/api/stop', { method: 'POST' }); } catch (e) { }
+    try { await fetch(`/api/stop?session_id=${sessionId}`, { method: 'POST' }); } catch (e) { }
     resetUI();
 }
 

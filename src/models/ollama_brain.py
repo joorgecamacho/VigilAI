@@ -53,7 +53,7 @@ class OllamaBrain:
         "bot", "npc", "manco", "manca", "noob",
     ]
 
-    def __init__(self, model: str = "gemma2:27b"):
+    def __init__(self, model: str = "gemma4:31b-cloud"):
         self.model = model
         self.user_history = defaultdict(list)
         self.user_warnings = defaultdict(int)
@@ -177,7 +177,7 @@ ANÁLISIS:
         if len(self.user_history[user]) > self.max_user_history:
             self.user_history[user].pop(0)
 
-    def generate_response(self, user_name: str, message: str, context: str = "general_chat") -> Optional[str]:
+    async def generate_response(self, user_name: str, message: str, context: str = "general_chat") -> Optional[str]:
         """Generate a witty/sarcastic response"""
         system_prompt = (
             "Eres VigilAI, un moderador de Twitch cibernético y sarcástico. "
@@ -185,7 +185,8 @@ ANÁLISIS:
         )
 
         try:
-            response = ollama.chat(model=self.model, messages=[
+            client = ollama.AsyncClient()
+            response = await client.chat(model=self.model, messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': f"Usuario: {user_name}\nMensaje: {message}"},
             ])
@@ -194,7 +195,7 @@ ANÁLISIS:
             print(f"❌ Error generating Ollama response: {e}")
             return None
 
-    def analyze_complex_sentiment(self, text: str, user_name: str = "Unknown") -> str:
+    async def analyze_complex_sentiment(self, text: str, user_name: str = "Unknown") -> str:
         """
         Analyze with full context: user profile, game category, chat history.
         Returns: 'safe' or 'toxic'
@@ -204,7 +205,8 @@ ANÁLISIS:
         system_prompt = self._build_context_prompt()
         
         try:
-            response = ollama.chat(model=self.model, messages=[
+            client = ollama.AsyncClient()
+            response = await client.chat(model=self.model, messages=[
                 {
                     'role': 'system',
                     'content': system_prompt
@@ -242,7 +244,7 @@ Responde SOLO con: SAFE o TOXIC"""
             print(f"❌ Error analyzing with Ollama: {e}")
             return 'toxic'
 
-    def analyze_with_reasoning(self, text: str, user_name: str = "Unknown") -> dict:
+    async def analyze_with_reasoning(self, text: str, user_name: str = "Unknown") -> dict:
         """
         Analyze with FULL reasoning output for debugging/logging.
         Returns: dict with verdict, reasoning, and all context used
@@ -286,7 +288,8 @@ Considerando la categoría del stream ({self.current_game}), el historial del us
         }
         
         try:
-            response = ollama.chat(model=self.model, messages=[
+            client = ollama.AsyncClient()
+            response = await client.chat(model=self.model, messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt},
             ])
